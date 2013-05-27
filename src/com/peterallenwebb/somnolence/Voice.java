@@ -9,8 +9,6 @@ public class Voice {
 	private float freq;
 	private float blend;
 	
-	private static final float twoPi = (float)(2.0 * Math.PI);
-	
 	public Voice(SomnolenceContext ctx) {
 		context = ctx; 
 		phase = 0.0f;
@@ -134,8 +132,6 @@ public class Voice {
 		
 		return triSig;
 	}
-	
-	
 	
 	// Generate a piecewise parabolic base wave for triangular
 	// quasi-bandlimited triangle wave signal.

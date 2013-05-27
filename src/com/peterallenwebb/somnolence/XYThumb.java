@@ -9,11 +9,12 @@ import android.widget.RelativeLayout;
 
 public class XYThumb extends View {
 
-	private int thumbHeight = 40;
-	private int thumbWidth = 40;
+	private int thumbHeight = 80;
+	private int thumbWidth = 80;
 	
-	public int xPos;
-	public int yPos;
+	public float xPos;
+	public float yPos;
+	public int color = Color.BLUE;
 	
 	public XYThumb(Context context) {
 		super(context);
@@ -28,23 +29,23 @@ public class XYThumb extends View {
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
 
-		RelativeLayout r = null;
+		RelativeLayout r = (RelativeLayout)this.getParent();
 		int action = ev.getAction();
 		switch (action & MotionEvent.ACTION_MASK) {
 		case MotionEvent.ACTION_DOWN: {
 			float x = ev.getX();
 			float y = ev.getY();
-			mLastTouchX = x;
-			mLastTouchY = y;
+			mLastTouchX = x + xPos;
+			mLastTouchY = y + yPos;
 			mActivePointerId = ev.getPointerId(0);
 			break;
 		}
 		case MotionEvent.ACTION_MOVE: {
 			// Find the index of the active pointer and fetch its position
 			int pointerIndex = ev.findPointerIndex(mActivePointerId);
-			float x = ev.getX(pointerIndex);
-			float y = ev.getY(pointerIndex);
-
+			float x = xPos + ev.getX(pointerIndex);
+			float y = yPos + ev.getY(pointerIndex);
+			
 			float dx = x - mLastTouchX;
 			float dy = y - mLastTouchY;
 
@@ -54,11 +55,11 @@ public class XYThumb extends View {
 			mLastTouchX = x;
 			mLastTouchY = y;
 			
-			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(40, 40);
-			params.leftMargin = xPos;
-			params.topMargin = yPos;
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(thumbWidth, thumbHeight);
+			params.leftMargin = (int)x;
+			params.topMargin = (int)y;
 			r.updateViewLayout(this, params);
-
+			invalidate();
 			break;
 		}
 		case MotionEvent.ACTION_UP:
@@ -75,8 +76,8 @@ public class XYThumb extends View {
 				// This was our active pointer going up. Choose a new
 				// active pointer and adjust accordingly.
 				final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-				mLastTouchX = ev.getX(newPointerIndex);
-				mLastTouchY = ev.getY(newPointerIndex);
+				mLastTouchX = xPos + ev.getX(newPointerIndex);
+				mLastTouchY = yPos + ev.getY(newPointerIndex);
 				mActivePointerId = ev.getPointerId(newPointerIndex);
 			}
 			break;
@@ -96,7 +97,7 @@ public class XYThumb extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		canvas.drawColor(Color.CYAN);
+		canvas.drawColor(color);
 	}
 
 }

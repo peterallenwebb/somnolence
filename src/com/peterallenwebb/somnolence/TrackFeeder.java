@@ -1,6 +1,6 @@
 package com.peterallenwebb.somnolence;
 
-import java.util.Queue;
+
 import java.util.concurrent.ArrayBlockingQueue;
 
 import android.media.AudioFormat;

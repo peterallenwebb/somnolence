@@ -5,6 +5,7 @@ import com.peterallenwebb.somnolence.R;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
 public class InstrumentActivity extends Activity {
@@ -72,9 +73,17 @@ public class InstrumentActivity extends Activity {
 			}
 		});
         
-        TrackFeeder f = new TrackFeeder(ctx, c);
+        RelativeLayout relativeLayout = (RelativeLayout)this.findViewById(R.id.relativeLayout);
         
-        new Thread(f).start();
+        XYThumb t1 = new XYThumb(relativeLayout.getContext());
+        relativeLayout.addView(t1);
+        
+        XYThumb t2 = new XYThumb(relativeLayout.getContext());
+        relativeLayout.addView(t2);
+        
+        
+        // TrackFeeder f = new TrackFeeder(ctx, c);
+        // new Thread(f).start();
     }
 
 
