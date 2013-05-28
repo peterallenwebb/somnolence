@@ -8,23 +8,28 @@ import android.view.View;
 import android.widget.RelativeLayout;
 
 public class XYThumb extends View {
-
-	private int thumbHeight = 80;
-	private int thumbWidth = 80;
 	
+	// Location and appearance.
 	public float xPos;
 	public float yPos;
 	public int color = Color.BLUE;
+	private int thumbHeight = 80;
+	private int thumbWidth = 80;
+	
+	// Events.
+	private XYChangeListener listener;
+	
+	// Pointer tracking.
+	private float mLastTouchX;
+	private float mLastTouchY;
+	private int mActivePointerId;
+	
 	
 	public XYThumb(Context context) {
 		super(context);
 		setMinimumHeight(thumbHeight);
 		setMinimumWidth(thumbWidth);
 	}
-
-	private float mLastTouchX;
-	private float mLastTouchY;
-	private int mActivePointerId;
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
@@ -60,6 +65,11 @@ public class XYThumb extends View {
 			params.topMargin = (int)y;
 			r.updateViewLayout(this, params);
 			invalidate();
+			
+			if (listener != null) {
+				listener.onXYChange(this, xPos / r.getWidth(), yPos / r.getHeight());
+			}
+			
 			break;
 		}
 		case MotionEvent.ACTION_UP:
@@ -99,5 +109,12 @@ public class XYThumb extends View {
 	protected void onDraw(Canvas canvas) {
 		canvas.drawColor(color);
 	}
-
+	
+	public interface XYChangeListener {
+		void onXYChange(XYThumb xyThumb, float x, float y);
+	}
+	
+	public void setOnXYChangeListener(XYChangeListener l) {
+		listener = l;
+	}
 }

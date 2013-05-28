@@ -8,12 +8,16 @@ public class Voice {
 	private float phaseIncrement;
 	private float freq;
 	private float blend;
+	private float modIncrement;
+	private float modPhase;
+	private float modAmount;
 	
 	public Voice(SomnolenceContext ctx) {
 		context = ctx; 
 		phase = 0.0f;
 		freq = 440.0f;
 		phaseIncrement = (float)(freq / context.sampleRate);
+		modIncrement = (float)(3.0 / context.sampleRate);
 	}
 	
 	public void setFreq(float f) {
@@ -25,12 +29,23 @@ public class Voice {
 		blend  = b;
 	}
 	
+	public void setModAmount(float m) {
+		modAmount = m;
+	}
+	
 	public Block getNextBlock() {
 		
 		Block signal = new Block(context.blockSize, false);
 		
 		signal.left = getSinTriBlend(phase, freq);
 		signal.right = signal.left;
+		
+		for (int i = 0; i < signal.left.length; i++) {
+			signal.left[i] = signal.left[i] * (1.0f - (((float)Math.sin(2.0 * Math.PI * modPhase) + 1) / 2.0f * modAmount / 2.0f));
+			modPhase += modIncrement;
+		}
+		
+		modPhase = modPhase - (float)Math.floor(modPhase);
 		
 		phase = phase + context.blockSize * phaseIncrement;
 		phase = phase - (float)Math.floor(phase);
@@ -49,8 +64,10 @@ public class Voice {
 			finalSig[i] = ((1.0f - blend) * (float)Math.sin(2.0 * Math.PI * currPhase) + blend * triSig[i] )/ 2;
 			
 			currPhase += fixedPhaseInc;
-			currPhase = currPhase - (float)Math.floor(currPhase);
 		}
+		
+		// NOTE TO SELF: Move into loop for more accuracy, less speed.
+		currPhase = currPhase - (float)Math.floor(currPhase);
 		
 		return finalSig;
 	}

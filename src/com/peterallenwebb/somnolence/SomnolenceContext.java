@@ -8,5 +8,4 @@ public class SomnolenceContext {
 	public int blockLatency = 3;
     
 	public Queue<Block> blockPool;
-	
 }
