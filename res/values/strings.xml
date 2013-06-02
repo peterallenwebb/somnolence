@@ -4,5 +4,6 @@
     <string name="app_name">Somnolence</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_instrument2">Instrument2Activity</string>
 
 </resources>
