@@ -6,16 +6,17 @@ import java.util.List;
 public class Choir {
 
 	public List<Voice> voices;
-	private SomnolenceContext context;
+	
+	private SomnolenceContext _context;
 	
 	public Choir(SomnolenceContext ctx) {
-		context = ctx;
+		_context = ctx;
 		voices = new ArrayList<Voice>();
 	}
 
 	public Block getNextBlock()
 	{
-		Block sum = new Block(context.blockSize);
+		Block sum = new Block(_context.blockSize);
 	
 		for (Voice v : voices) {
 			Block b = v.getNextBlock();

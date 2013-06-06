@@ -9,44 +9,44 @@ import android.media.AudioTrack;
 
 public class TrackFeeder implements Runnable {
 
-	public Choir choir;
-	public AudioTrack track;
-	private SomnolenceContext context;
-	public boolean running;
-	public ArrayBlockingQueue<Block> buffer;
+	private Choir _choir;
+	private AudioTrack _track;
+	private boolean _running;
+	private ArrayBlockingQueue<Block> _buffer;
+	private SomnolenceContext _context;
 	
 	public TrackFeeder(SomnolenceContext ctx, Choir c) {
-		context = ctx;
-		choir = c;
-		running = false;
-		buffer = new ArrayBlockingQueue<Block>(context.blockLatency);
+		_context = ctx;
+		_choir = c;
+		_running = false;
+		_buffer = new ArrayBlockingQueue<Block>(_context.blockLatency);
 		
 		int buffSize = AudioTrack.getMinBufferSize(
-				context.sampleRate,
+				_context.sampleRate,
 				AudioFormat.CHANNEL_OUT_STEREO,
 				AudioFormat.ENCODING_PCM_16BIT);
 		
 		buffSize = Math.max(buffSize, 32000);
 		
-		track = new AudioTrack(
+		_track = new AudioTrack(
 				AudioManager.STREAM_MUSIC,
-				context.sampleRate,
+				_context.sampleRate,
 				AudioFormat.CHANNEL_OUT_STEREO,
 				AudioFormat.ENCODING_PCM_16BIT,
 				buffSize,
 				AudioTrack.MODE_STREAM);
 	
-		Thread t = new Thread(new Feed(choir, buffer));
+		Thread t = new Thread(new Feed(_choir, _buffer));
 		t.start();
 	}
 	
 	public void run() {
 		
-		running = true;
+		_running = true;
 		
-		track.play();
+		_track.play();
 		
-		while (running) {
+		while (_running) {
 			
 			Block b = null;
 			
@@ -54,14 +54,14 @@ public class TrackFeeder implements Runnable {
 				// Note that this call is blocking, so we will wait here for a block
 				// to arrive if it is not ready, which should never happen if the
 				// block production is keeping up with demand.
-				b = buffer.take();
+				b = _buffer.take();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			
-			byte [] audioData = new byte[4*context.blockSize];
+			byte [] audioData = new byte[4*_context.blockSize];
 			
-			for (int i = 0; i < context.blockSize; i++)
+			for (int i = 0; i < _context.blockSize; i++)
 			{
 				float l = b.left[i];
 				l = l >  1.0f ?  1.0f : l;
@@ -79,7 +79,7 @@ public class TrackFeeder implements Runnable {
 				audioData[4*i+3] = (byte)((rs >> 8) & 0xff);
 			}
 			
-			track.write(audioData, 0, 4 * context.blockSize);
+			_track.write(audioData, 0, 4 * _context.blockSize);
 		}
 			
 	}

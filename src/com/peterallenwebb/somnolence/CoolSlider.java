@@ -13,19 +13,22 @@ import android.view.View;
 public class CoolSlider extends View {
 
 	// Location and appearance.
-	private int thumbSize = 100;
-	private int thumbPos = 0;
+	private int   _thumbSize  = 100;
+	private float   _thumbPos   = 0;
 	private float _squareness = 0.5f;
-
-	private Paint borderPaint;
-	private Paint fillPaint;
-
+	
+	private static float _circleRadius;
+	
+	private Paint _borderPaint;
+	private Paint _fillPaint;
+	private Paint _linePaint;
+	
 	private Path _thumbPath;
 
 	// Pointer tracking.
-	private float mLastTouchX;
-	private float mLastTouchY;
-	private int mActivePointerId;
+	private float _lastTouchX;
+	private float _lastTouchY;
+	private int _activePointerId;
 
 	public CoolSlider(Context context) {
 		super(context);
@@ -33,22 +36,30 @@ public class CoolSlider extends View {
 	}
 
 	private void init() {
-		setMinimumHeight((int) (thumbSize * 1.20));
+		setMinimumHeight((int) (_thumbSize * 1.20));
 		setMinimumWidth(400);
 
-		borderPaint = new Paint();
-		borderPaint.setDither(true);
-		borderPaint.setColor(0xFF000000);
-		borderPaint.setStyle(Paint.Style.STROKE);
-		borderPaint.setStrokeJoin(Paint.Join.ROUND);
-		borderPaint.setStrokeWidth(3);
+		_borderPaint = new Paint();
+		_borderPaint.setDither(true);
+		_borderPaint.setColor(0xFF990000);
+		_borderPaint.setStyle(Paint.Style.STROKE);
+		_borderPaint.setStrokeJoin(Paint.Join.ROUND);
+		_borderPaint.setStrokeWidth(3);
 
-		fillPaint = new Paint();
-		fillPaint.setDither(true);
-		fillPaint.setColor(0xFFFF5500);
-		fillPaint.setStyle(Paint.Style.FILL);
+		_fillPaint = new Paint();
+		_fillPaint.setDither(true);
+		_fillPaint.setColor(0xFFFF5500);
+		_fillPaint.setStyle(Paint.Style.FILL);
 
+		_linePaint = new Paint();
+		_linePaint.setDither(true);
+		_linePaint.setColor(0xFF000000);
+		_linePaint.setStyle(Paint.Style.STROKE);
+		
 		_squareness = 0.5f;
+		
+		_circleRadius = (float)Math.sqrt(4.0 / Math.PI);
+		
 		_thumbPath = updatePath(_squareness);
 	}
 
@@ -68,6 +79,10 @@ public class CoolSlider extends View {
 
 		_thumbPath = updatePath(_squareness);
 	}
+	
+	public void setThumbPos(float thumbPos) {
+		_thumbPos = thumbPos;
+	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
@@ -76,49 +91,49 @@ public class CoolSlider extends View {
 		case MotionEvent.ACTION_DOWN: {
 			float x = ev.getX();
 			float y = ev.getY();
-			mLastTouchX = x;
-			mLastTouchY = y;
-			mActivePointerId = ev.getPointerId(0);
+			_lastTouchX = x;
+			_lastTouchY = y;
+			_activePointerId = ev.getPointerId(0);
 			break;
 		}
 		case MotionEvent.ACTION_MOVE: {
 			// Find the index of the active pointer and fetch its position
-			int pointerIndex = ev.findPointerIndex(mActivePointerId);
+			int pointerIndex = ev.findPointerIndex(_activePointerId);
 			float x = ev.getX(pointerIndex);
 			float y = ev.getY(pointerIndex);
 
-			float dx = x - mLastTouchX;
-			float dy = y - mLastTouchY;
+			float dx = x - _lastTouchX;
+			float dy = y - _lastTouchY;
 
 			// xPos += dx;
 			// yPos += dy;
 
 			setSquareness(x / this.getWidth());
 
-			mLastTouchX = x;
-			mLastTouchY = y;
+			_lastTouchX = x;
+			_lastTouchY = y;
 
 			invalidate();
 
 			break;
 		}
 		case MotionEvent.ACTION_UP:
-			mActivePointerId = -1;
+			_activePointerId = -1;
 			break;
 		case MotionEvent.ACTION_CANCEL:
-			mActivePointerId = -1;
+			_activePointerId = -1;
 			break;
 		case MotionEvent.ACTION_POINTER_UP: {
 			// Extract the index of the pointer that left the touch sensor
 			final int pointerIndex = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
 			final int pointerId = ev.getPointerId(pointerIndex);
-			if (pointerId == mActivePointerId) {
+			if (pointerId == _activePointerId) {
 				// This was our active pointer going up. Choose a new
 				// active pointer and adjust accordingly.
 				final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-				mLastTouchX = ev.getX(newPointerIndex);
-				mLastTouchY = ev.getY(newPointerIndex);
-				mActivePointerId = ev.getPointerId(newPointerIndex);
+				_lastTouchX = ev.getX(newPointerIndex);
+				_lastTouchY = ev.getY(newPointerIndex);
+				_activePointerId = ev.getPointerId(newPointerIndex);
 			}
 			break;
 		}
@@ -141,7 +156,7 @@ public class CoolSlider extends View {
 
 		float[] px = new float[segments];
 		float[] py = new float[segments];
-
+		
 		int curPoint = 0;
 
 		// top of square
@@ -174,9 +189,9 @@ public class CoolSlider extends View {
 
 		for (int j = 0; j < segments; j++) {
 			float norm = (float) Math.hypot(px[j], py[j]);
-			float factor = (1.0f - squareness) + squareness * norm;
-			px[j] = px[j] / norm * factor * thumbSize / 2.0f;
-			py[j] = py[j] / norm * factor * thumbSize / 2.0f;
+			float factor = (1.0f - squareness) * _circleRadius + squareness * norm;
+			px[j] = px[j] / norm * factor * _thumbSize / 2.0f;
+			py[j] = py[j] / norm * factor * _thumbSize / 2.0f;
 		}
 
 		Path path = new Path();
@@ -194,11 +209,12 @@ public class CoolSlider extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		canvas.save();
-		float thumbX = thumbSize / 2.0f;
+		float thumbX = _thumbSize * _circleRadius + 3.0f;
 		float thumbY = this.getHeight() / 2.0f + 3.0f;
 		canvas.translate(thumbX, thumbY);
-		canvas.drawPath(_thumbPath, fillPaint);
-		canvas.drawPath(_thumbPath, borderPaint);
+		canvas.drawLine(0.0f, 0.0f, this.getWidth() - 2.0f * _circleRadius, 0.0f, _linePaint);
+		canvas.drawPath(_thumbPath, _fillPaint);
+		canvas.drawPath(_thumbPath, _borderPaint);
 		canvas.restore();
 	}
 }

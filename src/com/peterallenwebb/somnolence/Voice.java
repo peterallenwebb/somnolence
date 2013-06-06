@@ -3,52 +3,52 @@ package com.peterallenwebb.somnolence;
 // This class is not re-entrant. One thread at a time, please.
 public class Voice {
 	
-	private SomnolenceContext context;
-	private float phase;
-	private float phaseIncrement;
-	private float freq;
-	private float blend;
-	private float modIncrement;
-	private float modPhase;
-	private float modAmount;
+	private SomnolenceContext _context;
+	private float _phase;
+	private float _phaseIncrement;
+	private float _freq;
+	private float _blend;
+	private float _modIncrement;
+	private float _modPhase;
+	private float _modAmount;
 	
 	public Voice(SomnolenceContext ctx) {
-		context = ctx; 
-		phase = 0.0f;
-		freq = 440.0f;
-		phaseIncrement = (float)(freq / context.sampleRate);
-		modIncrement = (float)(3.0 / context.sampleRate);
+		_context = ctx; 
+		_phase = 0.0f;
+		_freq = 440.0f;
+		_phaseIncrement = (float)(_freq / _context.sampleRate);
+		_modIncrement = (float)(3.0 / _context.sampleRate);
 	}
 	
 	public void setFreq(float f) {
-		freq = f;
-		phaseIncrement = (float)(freq / context.sampleRate);
+		_freq = f;
+		_phaseIncrement = (float)(_freq / _context.sampleRate);
 	}
 	
 	public void setBlend(float b) {
-		blend  = b;
+		_blend  = b;
 	}
 	
 	public void setModAmount(float m) {
-		modAmount = m;
+		_modAmount = m;
 	}
 	
 	public Block getNextBlock() {
 		
-		Block signal = new Block(context.blockSize, false);
+		Block signal = new Block(_context.blockSize, false);
 		
-		signal.left = getSinTriBlend(phase, freq);
+		signal.left = getSinTriBlend(_phase, _freq);
 		signal.right = signal.left;
 		
 		for (int i = 0; i < signal.left.length; i++) {
-			signal.left[i] = signal.left[i] * (1.0f - (((float)Math.sin(2.0 * Math.PI * modPhase) + 1) / 2.0f * modAmount / 2.0f));
-			modPhase += modIncrement;
+			signal.left[i] = signal.left[i] * (1.0f - (((float)Math.sin(2.0 * Math.PI * _modPhase) + 1) / 2.0f * _modAmount / 2.0f));
+			_modPhase += _modIncrement;
 		}
 		
-		modPhase = modPhase - (float)Math.floor(modPhase);
+		_modPhase = _modPhase - (float)Math.floor(_modPhase);
 		
-		phase = phase + context.blockSize * phaseIncrement;
-		phase = phase - (float)Math.floor(phase);
+		_phase = _phase + _context.blockSize * _phaseIncrement;
+		_phase = _phase - (float)Math.floor(_phase);
 		
 		return signal;
 	}
@@ -59,9 +59,9 @@ public class Voice {
 		float[] triSig = getTriSig(currPhase + 0.5f, fixedFreq);
 		float[] finalSig = new float[triSig.length];
 				
-		float fixedPhaseInc = fixedFreq / context.sampleRate;
+		float fixedPhaseInc = fixedFreq / _context.sampleRate;
 		for (int i = 0; i < triSig.length; i++) {
-			finalSig[i] = ((1.0f - blend) * (float)Math.sin(2.0 * Math.PI * currPhase) + blend * triSig[i] )/ 2;
+			finalSig[i] = ((1.0f - _blend) * (float)Math.sin(2.0 * Math.PI * currPhase) + _blend * triSig[i] )/ 2;
 			
 			currPhase += fixedPhaseInc;
 		}
@@ -79,9 +79,9 @@ public class Voice {
 		float[] sawSig = getSawSig(currPhase + phaseBias, fixedFreq);
 		float[] finalSig = new float[sawSig.length];
 				
-		float fixedPhaseInc = fixedFreq / context.sampleRate;
+		float fixedPhaseInc = fixedFreq / _context.sampleRate;
 		for (int i = 0; i < sawSig.length; i++) {
-			finalSig[i] = ((1.0f - blend) * (float)Math.sin(2.0 * Math.PI * currPhase) + blend * sawSig[i] )/ 2;
+			finalSig[i] = ((1.0f - _blend) * (float)Math.sin(2.0 * Math.PI * currPhase) + _blend * sawSig[i] )/ 2;
 			
 			currPhase += fixedPhaseInc;
 			currPhase = currPhase - (float)Math.floor(currPhase);
@@ -94,11 +94,11 @@ public class Voice {
 	private float[] getSawSig(float currPhase, float fixedFreq)
 	{
 		if (sawSig == null)
-			sawSig = new float[context.blockSize];
+			sawSig = new float[_context.blockSize];
 		
 		float[] sawBase = getPpSawBase(currPhase, fixedFreq);
 		
-		float scale = 1 / 8.0f / fixedFreq * context.sampleRate;
+		float scale = 1 / 8.0f / fixedFreq * _context.sampleRate;
 		for (int i = 0; i < sawSig.length; i++) {
 			sawSig[i] = (sawBase[i + 2] - sawBase[i]) * scale;
 		}
@@ -111,17 +111,17 @@ public class Voice {
 	private float[] sawBase; 
 	private float[] getPpSawBase(float currPhase, float fixedFreq) {
 		
-		float fixedPhaseInc = fixedFreq / context.sampleRate;
+		float fixedPhaseInc = fixedFreq / _context.sampleRate;
 		
 		if (sawBase == null)
-			sawBase = new float[context.blockSize + 2];
+			sawBase = new float[_context.blockSize + 2];
 		
 		// Back up a sample to produce a bit more signal, which we need
 		// for the differentiation step.
 		currPhase = currPhase - fixedPhaseInc;
 		currPhase = currPhase - (float)Math.floor(currPhase);
 				
-		for (int i = 0; i < context.blockSize + 2; i++) {
+		for (int i = 0; i < _context.blockSize + 2; i++) {
 			sawBase[i] = 2.0f * currPhase - 1.0f;
 			sawBase[i] *= sawBase[i];
 			
@@ -138,11 +138,11 @@ public class Voice {
 	private float[] getTriSig(float currPhase, float fixedFreq)
 	{
 		if (triSig == null)
-			triSig = new float[context.blockSize];
+			triSig = new float[_context.blockSize];
 		
 		float[] triBase = getPpTriBase(currPhase, fixedFreq);
 		
-		float scale = 1 / 8.0f / fixedFreq * context.sampleRate;
+		float scale = 1 / 8.0f / fixedFreq * _context.sampleRate;
 		for (int i = 0; i < triSig.length; i++) {
 			triSig[i] = (triBase[i + 2] - triBase[i]) * scale;
 		}
@@ -155,10 +155,10 @@ public class Voice {
 	private float[] triBase; 
 	private float[] getPpTriBase(float currPhase, float fixedFreq) {
 		
-		float fixedPhaseInc = fixedFreq / context.sampleRate;
+		float fixedPhaseInc = fixedFreq / _context.sampleRate;
 		
 		if (triBase == null)
-			triBase = new float[context.blockSize + 2];
+			triBase = new float[_context.blockSize + 2];
 		
 		// Back up a sample to produce a bit more signal, which we need
 		// for the differentiation step.
@@ -185,7 +185,7 @@ public class Voice {
 			signFactor = 1.0f;
 		}
 		
-		for (int i = 0; i < context.blockSize + 2; i++) {	
+		for (int i = 0; i < _context.blockSize + 2; i++) {	
 			
 			triBase[i] = signFactor * (1.0f -  triVal * triVal);
 			triVal += triInc;
